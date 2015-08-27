@@ -5,7 +5,7 @@ var board = new five.Board();
 // The board's pins will not be accessible until
 // the board has reported that it is ready
 board.on("ready", function () {
-    five.PairBarriers(2,0);
+    five.PairBarriers(2,3);
 });
 
 
