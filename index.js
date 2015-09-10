@@ -3,15 +3,27 @@ var board = new five.Board();
 
 board.on("ready", function () {
     var mode = 'FREE',
-        countdown = 3000,
+        countdownInterval = 3000,
         isCountdownStarted = false,
         isLocked = false,
-        sequenceCombinations = [].
-        currentCombination = {
+        sequenceCombinations = [],
+        sequenceEnter = [
+            '{"external":true,"internal":false}',
+            '{"external":true,"internal":true}',
+            '{"external":false,"internal":true}',
+            '{"external":false,"internal":false}'
+        ],
+        sequenceLeave = [
+            '{"external":false,"internal":true}',
+            '{"external":true,"internal":true}',
+            '{"external":true,"internal":false}',
+            '{"external":false,"internal":false}'
+        ],
+        freeCombination = {
             external: false,
             internal: false
         },
-        freeCombination = {
+        currentCombination = {
             external: false,
             internal: false
         };
@@ -43,17 +55,17 @@ board.on("ready", function () {
 
     var runBusyMode = function () {
         if ( isAlreadyUnblocked() ){
+            isCountdownStarted = false;
             isLocked = false;
             mode = 'FREE';
+            console.log( 'unlocked' );
+            console.log( 'Forced FREE' );
         }else if ( isNewCountdown() ) {
             initCountdown();
             runCountdown();
-            console.log('entro init');
         }else{
-            console.log('entro run');
             runCountdown();
         }
-
     };
 
     var isFreeCombination = function () {
@@ -62,8 +74,7 @@ board.on("ready", function () {
 
     var isAlreadyUnblocked = function () {
         return isFreeCombination() &&
-            isLocked === true &&
-            isCountdownStarted === false;
+            isLocked === true;
     };
 
     var isNewCountdown = function () {
@@ -73,27 +84,60 @@ board.on("ready", function () {
 
     var initCountdown = function () {
         sequenceCombinations = [];
+        setTimeout(countdownCallback, countdownInterval);
+        isCountdownStarted = true;
+    };
 
-        setTimeout(function () {
-            isCountdownStarted = false;
-
-            if ( !isFreeCombination() ) {
+    var countdownCallback = function () {
+        if(mode === 'BUSY') {
+            if (!isFreeCombination()) {
                 isLocked = true;
                 console.log('locked');
             } else {
+                isCountdownStarted = false;
                 isLocked = false;
                 mode = 'FREE';
-                console.log(mode);
+                console.log('Forced FREE');
             }
-
-        }, countdown);
-
-        isCountdownStarted = true;
+        }
     };
 
     var runCountdown = function () {
         sequenceCombinations.push(JSON.stringify(currentCombination));
-        console.log(sequenceCombinations);
+        console.log( sequenceCombinations );
+        checkSequenceCombinations();
+    };
+
+    var checkSequenceCombinations = function () {
+        if( hasSameLengthAsSequenceEnter() &&
+            isSequenceValidCombination( sequenceEnter ) ){
+                console.log('enter');
+                isCountdownStarted = false;
+                mode = 'FREE';
+                console.log( 'Forced FREE' );
+        }
+
+        if( hasSameLengthAsSequenceLeave() &&
+            isSequenceValidCombination( sequenceLeave ) ){
+                console.log('leave');
+                isCountdownStarted = false;
+                mode = 'FREE';
+                console.log( 'Forced FREE' );
+        }
+    };
+
+    var hasSameLengthAsSequenceEnter = function () {
+        return sequenceCombinations.length === sequenceEnter.length;
+    };
+
+    var hasSameLengthAsSequenceLeave = function () {
+        return sequenceCombinations.length === sequenceLeave.length;
+    };
+
+    var isSequenceValidCombination = function ( sequenceValid ){
+        return sequenceCombinations.every(function(element, index) {
+            return element === sequenceValid[index]
+        });
     };
 
     initialize();
